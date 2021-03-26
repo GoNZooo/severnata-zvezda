@@ -22,3 +22,4 @@ cabal.sandbox.config
 severnata-zvezda.cabal
 *.iml
 .idea
+out
