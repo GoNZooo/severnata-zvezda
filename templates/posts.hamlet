@@ -1,0 +1,9 @@
+<h1>Posts
+    <form .form-horizontal method=post action=@{PostsR} enctype=#{formEnctype}>
+        ^{formWidget}
+
+        <button .btn.btn-primary type="submit">
+            Submit
+    <ul #post-list>
+        $forall (postId, Post title _body _userId) <- posts
+            <li><a href=@{PostR postId}>#{title}

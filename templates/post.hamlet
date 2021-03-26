@@ -1,0 +1,2 @@
+<h1 #post-title>#{title}
+<section #post-body>#{body}

@@ -172,12 +172,15 @@ instance Yesod App where
     Bool ->
     Handler AuthResult
   -- Routes not requiring authentication.
-  isAuthorized (AuthR _) _ = return Authorized
-  isAuthorized CommentR _ = return Authorized
-  isAuthorized HomeR _ = return Authorized
-  isAuthorized FaviconR _ = return Authorized
-  isAuthorized RobotsR _ = return Authorized
-  isAuthorized (StaticR _) _ = return Authorized
+  isAuthorized (AuthR _) _ = pure Authorized
+  isAuthorized CommentR _ = pure Authorized
+  isAuthorized HomeR _ = pure Authorized
+  isAuthorized (PostR _) True = isAuthenticated
+  isAuthorized (PostR _) False = pure Authorized
+  isAuthorized PostsR _ = pure Authorized
+  isAuthorized FaviconR _ = pure Authorized
+  isAuthorized RobotsR _ = pure Authorized
+  isAuthorized (StaticR _) _ = pure Authorized
   -- the profile route requires that the user is authenticated, so we
   -- delegate to that function
   isAuthorized ProfileR _ = isAuthenticated
@@ -252,7 +255,7 @@ instance YesodAuth App where
 
   -- Where to send a user after successful login
   loginDest :: App -> Route App
-  loginDest _ = HomeR
+  loginDest _ = PostsR
 
   -- Where to send a user after logout
   logoutDest :: App -> Route App
