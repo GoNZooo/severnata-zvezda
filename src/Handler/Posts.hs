@@ -18,9 +18,17 @@ data PostForm = PostForm
 
 getPostsR :: Handler Html
 getPostsR = do
-  (formWidget, formEnctype) <- generateFormPost postForm
+  maybeUserId <- maybeAuthId
+  (formWidget, formEncodingType) <- generateFormPost postForm
   allPostEntities <- runDB getAllPosts
-  let posts = List.map (\p -> (entityKey p, entityVal p)) allPostEntities
+  let posts =
+        List.map
+          ( \p ->
+              let postValue = entityVal p
+                  postKey = entityKey p
+               in (postKey, postValue, maybe False (== postUserId postValue) maybeUserId)
+          )
+          allPostEntities
 
   defaultLayout $ do
     setTitle "Posts"

@@ -36,6 +36,7 @@ import Database.Persist.Postgresql
 
 import Handler.Comment
 import Handler.Common
+import Handler.EditPosts
 import Handler.Home
 import Handler.Post
 import Handler.Posts

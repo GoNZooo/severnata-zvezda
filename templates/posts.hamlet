@@ -1,9 +1,13 @@
 <h1>Posts
-    <form .form-horizontal method=post action=@{PostsR} enctype=#{formEnctype}>
+    <form .form-horizontal method=post action=@{PostsR} enctype=#{formEncodingType}>
         ^{formWidget}
 
         <button .btn.btn-primary type="submit">
             Submit
     <ul #post-list>
-        $forall (postId, Post title _body _userId) <- posts
-            <li><a href=@{PostR postId}>#{title}
+        $forall (postId, Post title _body _userId, isPostOwner) <- posts
+            <li>
+                <div>
+                    <a href=@{PostR postId}>#{title}
+                    $if isPostOwner
+                        <a href=@{EditPostR postId}>Edit

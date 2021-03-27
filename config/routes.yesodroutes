@@ -8,7 +8,8 @@
 /robots.txt RobotsR GET
 
 / HomeR GET POST
-/post/#PostId PostR GET
+/post/#PostId PostR GET PUT
+/post/#PostId/edit EditPostR GET
 /posts PostsR GET POST
 
 /comments CommentR POST
