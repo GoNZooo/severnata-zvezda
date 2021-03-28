@@ -8,6 +8,7 @@
 module Handler.Posts where
 
 import qualified Data.List as List
+import Handler.Helpers
 import Import
 import Yesod.Form.Bootstrap3 (BootstrapFormLayout (..), renderBootstrap3)
 
@@ -16,17 +17,24 @@ data PostForm = PostForm
     body :: Textarea
   }
 
+data DeleteForm = DeleteForm
+
+deleteFormRender :: Form DeleteForm
+deleteFormRender = renderBootstrap3 BootstrapBasicForm $ pure DeleteForm
+
 getPostsR :: Handler Html
 getPostsR = do
   maybeUserId <- maybeAuthId
   (formWidget, formEncodingType) <- generateFormPost postForm
+  (deleteFormWidget, deleteFormEncodingType) <- generateFormPost deleteFormRender
   allPostEntities <- runDB getAllPosts
   let posts =
         List.map
           ( \p ->
               let postValue = entityVal p
                   postKey = entityKey p
-               in (postKey, postValue, maybe False (== postUserId postValue) maybeUserId)
+                  deletePostForm = deleteForm "Delete" (PostR postKey) deleteFormWidget deleteFormEncodingType
+               in (postKey, postValue, maybe False (== postUserId postValue) maybeUserId, deletePostForm)
           )
           allPostEntities
 
@@ -68,7 +76,7 @@ postForm =
             fsAttrs = [("class", "form-control"), ("placeholder", label)]
           }
    in renderBootstrap3 BootstrapBasicForm $
-        PostForm <$> areq textField (fieldSettings "Title") Nothing <*> areq textField (fieldSettings "Body") Nothing
+        PostForm <$> areq textField (fieldSettings "Title") Nothing <*> areq textareaField (fieldSettings "Body") Nothing
 
 getAllPosts :: DB [Entity Post]
 getAllPosts = selectList [] [Asc PostId]

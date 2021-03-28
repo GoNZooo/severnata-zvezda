@@ -5,9 +5,10 @@
         <button .btn.btn-primary type="submit">
             Submit
     <ul #post-list>
-        $forall (postId, Post title _body _userId, isPostOwner) <- posts
+        $forall (postId, Post title _body _userId, isPostOwner, deletePostForm) <- posts
             <li>
                 <div>
                     <a href=@{PostR postId}>#{title}
                     $if isPostOwner
                         <a href=@{EditPostR postId}>Edit
+                        ^{deletePostForm}

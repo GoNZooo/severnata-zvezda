@@ -36,6 +36,16 @@ putPostR postId = do
     Nothing ->
       notAuthenticated
 
+deletePostR :: PostId -> Handler Html
+deletePostR postId = do
+  maybeUserId <- maybeAuthId
+  case maybeUserId of
+    Just _userId' -> do
+      runDB $ deletePost postId
+      redirect $ PostsR
+    Nothing ->
+      notAuthenticated
+
 data PostForm = PostForm
   { title :: Text,
     body :: Text
@@ -59,3 +69,6 @@ getPost = getEntity
 
 modifyPost :: Entity Post -> DB ()
 modifyPost post = replace (entityKey post) $ entityVal post
+
+deletePost :: Key Post -> DB ()
+deletePost = delete
