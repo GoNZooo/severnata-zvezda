@@ -24,7 +24,7 @@ getEditPostR postId = do
   case maybeUserId of
     Just userId' -> do
       (formWidget, formEncodingType) <- generateFormPost $ postForm userId' postId
-      let editForm = putForm (PostR postId) formWidget formEncodingType
+      let editForm = putForm "Submit" (PostR postId) formWidget formEncodingType
       maybePostEntity <- runDB $ getPost postId
       case maybePostEntity of
         Just (Entity _postId post) -> defaultLayout $ do
