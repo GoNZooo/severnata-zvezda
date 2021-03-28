@@ -23,9 +23,11 @@ getEditPostR postId = do
   maybeUserId <- maybeAuthId
   case maybeUserId of
     Just userId' -> do
-      (formWidget, formEncodingType) <- generateFormPost $ postForm userId' postId
-      let editForm = putForm "Submit" (PostR postId) formWidget formEncodingType
       maybePostEntity <- runDB $ getPost postId
+      let titleValue = maybe "" (postTitle . entityVal) maybePostEntity
+          bodyValue = maybe "" (Textarea . postBody . entityVal) maybePostEntity
+      (formWidget, formEncodingType) <- generateFormPost $ postForm userId' postId titleValue bodyValue
+      let editForm = putForm "Submit" (PostR postId) formWidget formEncodingType
       case maybePostEntity of
         Just (Entity _postId post) -> defaultLayout $ do
           setTitle $ "Edit Post: " <> toHtml (postTitle post)
@@ -33,8 +35,8 @@ getEditPostR postId = do
         Nothing -> notFound
     Nothing -> notAuthenticated
 
-postForm :: UserId -> PostId -> Form PostForm
-postForm userId' postId =
+postForm :: UserId -> PostId -> Text -> Textarea -> Form PostForm
+postForm userId' postId title' body' =
   let fieldSettings label =
         FieldSettings
           { fsLabel = SomeMessage label,
@@ -45,8 +47,8 @@ postForm userId' postId =
           }
    in renderBootstrap3 BootstrapBasicForm $
         PostForm
-          <$> areq textField (fieldSettings "Title") Nothing
-          <*> areq textareaField (fieldSettings "Body") Nothing
+          <$> areq textField (fieldSettings "Title") (Just title')
+          <*> areq textareaField (fieldSettings "Body") (Just body')
           <*> areq hiddenField "" (Just userId')
           <*> areq hiddenField "" (Just postId)
 
