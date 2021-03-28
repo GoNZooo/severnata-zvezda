@@ -13,7 +13,7 @@ import Yesod.Form.Bootstrap3 (BootstrapFormLayout (..), renderBootstrap3)
 
 data PostForm = PostForm
   { title :: Text,
-    body :: Text
+    body :: Textarea
   }
 
 getPostsR :: Handler Html
@@ -42,7 +42,14 @@ postPostsR = do
     FormSuccess (PostForm title' body') -> do
       case maybeUser of
         Just userId -> do
-          insertResult <- runDB $ insertPost $ Post {postTitle = title', postBody = body', postUserId = userId}
+          insertResult <-
+            runDB $
+              insertPost $
+                Post
+                  { postTitle = title',
+                    postBody = unTextarea body',
+                    postUserId = userId
+                  }
           case insertResult of
             Just userId' -> defaultLayout $ do
               redirect $ PostR userId'
