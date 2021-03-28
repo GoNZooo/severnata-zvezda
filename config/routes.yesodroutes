@@ -7,11 +7,9 @@
 /favicon.ico FaviconR GET
 /robots.txt RobotsR GET
 
-/ HomeR GET POST
+/ HomeR GET
 /post/#PostId PostR GET PUT DELETE
 /post/#PostId/edit EditPostR GET
 /posts PostsR GET POST
-
-/comments CommentR POST
 
 /profile ProfileR GET

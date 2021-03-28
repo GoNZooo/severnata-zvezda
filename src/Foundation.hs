@@ -173,15 +173,14 @@ instance Yesod App where
     Handler AuthResult
   -- Routes not requiring authentication.
   isAuthorized (AuthR _) _ = pure Authorized
-  isAuthorized CommentR _ = pure Authorized
   isAuthorized HomeR _ = pure Authorized
-  isAuthorized (PostR _) True = isAuthenticated
-  isAuthorized (PostR _) False = pure Authorized
-  isAuthorized (EditPostR _) _ = isAuthenticated
   isAuthorized PostsR _ = pure Authorized
   isAuthorized FaviconR _ = pure Authorized
   isAuthorized RobotsR _ = pure Authorized
   isAuthorized (StaticR _) _ = pure Authorized
+  isAuthorized (PostR _) False = pure Authorized
+  isAuthorized (PostR _) True = isAuthenticated
+  isAuthorized (EditPostR _) _ = isAuthenticated
   -- the profile route requires that the user is authenticated, so we
   -- delegate to that function
   isAuthorized ProfileR _ = isAuthenticated
