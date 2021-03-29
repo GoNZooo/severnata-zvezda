@@ -6,7 +6,7 @@ User
     password Text Maybe
     UniqueUser ident
     deriving Typeable
-Post json
+BlogPost json
     title Text
     body Text -- this is markdown
     userId UserId

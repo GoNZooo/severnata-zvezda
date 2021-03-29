@@ -34,7 +34,7 @@ getPostsR = do
               let postValue = entityVal p
                   postKey = entityKey p
                   deletePostForm = deleteForm "Delete" (PostR postKey) deleteFormWidget deleteFormEncodingType
-               in (postKey, postValue, maybe False (== postUserId postValue) maybeUserId, deletePostForm)
+               in (postKey, postValue, maybe False (== blogPostUserId postValue) maybeUserId, deletePostForm)
           )
           allPostEntities
 
@@ -53,10 +53,10 @@ postPostsR = do
           insertResult <-
             runDB $
               insertPost $
-                Post
-                  { postTitle = title',
-                    postBody = unTextarea body',
-                    postUserId = userId
+                BlogPost
+                  { blogPostTitle = title',
+                    blogPostBody = unTextarea body',
+                    blogPostUserId = userId
                   }
           case insertResult of
             Just userId' -> defaultLayout $ do
@@ -78,8 +78,8 @@ postForm =
    in renderBootstrap3 BootstrapBasicForm $
         PostForm <$> areq textField (fieldSettings "Title") Nothing <*> areq textareaField (fieldSettings "Body") Nothing
 
-getAllPosts :: DB [Entity Post]
-getAllPosts = selectList [] [Asc PostId]
+getAllPosts :: DB [Entity BlogPost]
+getAllPosts = selectList [] [Asc BlogPostId]
 
-insertPost :: Post -> DB (Maybe (Key Post))
+insertPost :: BlogPost -> DB (Maybe (Key BlogPost))
 insertPost post = insertUnique post
