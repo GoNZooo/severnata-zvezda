@@ -124,6 +124,12 @@ instance Yesod App where
                 },
             NavbarLeft $
               MenuItem
+                { menuItemLabel = "Posts",
+                  menuItemRoute = PostsR,
+                  menuItemAccessCallback = True
+                },
+            NavbarLeft $
+              MenuItem
                 { menuItemLabel = "Profile",
                   menuItemRoute = ProfileR,
                   menuItemAccessCallback = isJust user
