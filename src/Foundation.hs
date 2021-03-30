@@ -16,7 +16,7 @@ import Control.Monad.Logger (LogSource)
 import qualified Data.CaseInsensitive as CI
 import Data.Kind (Type)
 import qualified Data.Text.Encoding as TE
-import Database.Persist.Sql (ConnectionPool, runSqlPool)
+import Database.Persist.Sql (BackendKey (..), ConnectionPool, runSqlPool)
 import Import.NoFoundation
 import Text.Hamlet (hamletFile)
 import Text.Jasmine (minifym)
@@ -235,14 +235,13 @@ instance YesodBreadcrumbs App where
   -- Takes the route that the user is currently on, and returns a tuple
   -- of the 'Text' that you want the label to display, and a previous
   -- breadcrumb route.
-  breadcrumb ::
-    -- | The route the user is visiting currently.
-    Route App ->
-    Handler (Text, Maybe (Route App))
-  breadcrumb HomeR = return ("Home", Nothing)
-  breadcrumb (AuthR _) = return ("Login", Just HomeR)
-  breadcrumb ProfileR = return ("Profile", Just HomeR)
-  breadcrumb _ = return ("home", Nothing)
+  breadcrumb :: Route App -> Handler (Text, Maybe (Route App))
+  breadcrumb HomeR = pure ("Home", Nothing)
+  breadcrumb (AuthR _) = pure ("Login", Just HomeR)
+  breadcrumb ProfileR = pure ("Profile", Just HomeR)
+  breadcrumb PostsR = pure ("Posts", Just HomeR)
+  breadcrumb (PostR (BlogPostKey (SqlBackendKey id'))) = pure ("Post " <> tshow id', Just PostsR)
+  breadcrumb _ = pure ("home", Nothing)
 
 -- How to run database actions.
 instance YesodPersist App where
