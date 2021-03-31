@@ -1,0 +1,3 @@
+#post-body-input {
+    min-height: 50vh;
+}

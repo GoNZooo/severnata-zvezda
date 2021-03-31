@@ -35,20 +35,25 @@ getEditPostR postId = do
         Nothing -> notFound
     Nothing -> notAuthenticated
 
+data InputType = TitleInput | BodyInput deriving (Eq)
+
 postForm :: UserId -> BlogPostId -> Text -> Textarea -> Form PostForm
 postForm userId' postId title' body' =
-  let fieldSettings label =
-        FieldSettings
-          { fsLabel = SomeMessage label,
-            fsTooltip = Nothing,
-            fsId = Nothing,
-            fsName = Nothing,
-            fsAttrs = [("class", "form-control"), ("placeholder", label)]
-          }
+  let fieldSettings inputType =
+        let (elementId, label) = case inputType of
+              TitleInput -> ("post-title-input", "Title")
+              BodyInput -> ("post-body-input", "Body")
+         in FieldSettings
+              { fsLabel = SomeMessage label,
+                fsTooltip = Nothing,
+                fsId = Just elementId,
+                fsName = Nothing,
+                fsAttrs = [("class", "form-control"), ("placeholder", label)]
+              }
    in renderBootstrap3 BootstrapBasicForm $
         PostForm
-          <$> areq textField (fieldSettings "Title") (Just title')
-          <*> areq textareaField (fieldSettings "Body") (Just body')
+          <$> areq textField (fieldSettings TitleInput) (Just title')
+          <*> areq textareaField (fieldSettings BodyInput) (Just body')
           <*> areq hiddenField "" (Just userId')
           <*> areq hiddenField "" (Just postId)
 
