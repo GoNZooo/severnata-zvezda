@@ -1,0 +1,13 @@
+{
+  "dockerFile": "Dockerfile",
+  "forwardPorts": [
+    3000
+  ],
+  "postCreateCommand": "stack build --fast --haddock",
+  "extensions": [
+    "sjurmillidahl.ormolu-vscode",
+    "dramforever.vscode-ghc-simple",
+    "lunaryorn.hlint",
+    "bigmoon.language-yesod"
+  ]
+}
