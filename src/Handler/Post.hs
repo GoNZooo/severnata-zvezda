@@ -20,7 +20,7 @@ getPostR postId = do
     Just (Entity _postId (BlogPost title' body' userId)) ->
       defaultLayout $ do
         setTitle $ toHtml title'
-        let renderedMarkdown = Markdown.markdown def (fromStrict body')
+        let renderedMarkdown = Markdown.markdown def $ fromStrict body'
             ownsPost = Just userId == maybeUserId
             editLink = [whamlet|<a href=@{EditPostR postId}>Edit|]
         $(widgetFile "post")
@@ -34,7 +34,15 @@ putPostR postId = do
       ((result, _formWidget), _ormEncodingType) <- runFormPost postForm
       case result of
         FormSuccess (PostForm {title = title', body = body'}) -> do
-          runDB $ modifyPost (Entity postId $ BlogPost {blogPostTitle = title', blogPostBody = body', blogPostUserId = userId'})
+          runDB $
+            modifyPost
+              ( Entity postId $
+                  BlogPost
+                    { blogPostTitle = title',
+                      blogPostBody = body',
+                      blogPostUserId = userId'
+                    }
+              )
           redirect $ PostR postId
         _ -> invalidArgs []
     Nothing ->
@@ -66,7 +74,9 @@ postForm =
             fsAttrs = [("class", "form-control"), ("placeholder", label)]
           }
    in renderBootstrap3 BootstrapBasicForm $
-        PostForm <$> areq textField (fieldSettings "Title") Nothing <*> areq textField (fieldSettings "Body") Nothing
+        PostForm
+          <$> areq textField (fieldSettings "Title") Nothing
+          <*> areq textField (fieldSettings "Body") Nothing
 
 getPost :: BlogPostId -> DB (Maybe (Entity BlogPost))
 getPost = getEntity
