@@ -21,7 +21,7 @@ import Import.NoFoundation
 import Text.Hamlet (hamletFile)
 import Text.Jasmine (minifym)
 import Yesod.Auth.Dummy
-import Yesod.Auth.OpenId (IdentifierType (Claimed), authOpenId)
+import Yesod.Auth.Message (AuthMessage (..))
 import Yesod.Core.Types (Logger)
 import qualified Yesod.Core.Unsafe as Unsafe
 import Yesod.Default.Util (addStaticContentExternal)
@@ -278,18 +278,12 @@ instance YesodAuth App where
     runDB $ do
       x <- getBy $ UniqueUser $ credsIdent credentials
       case x of
-        Just (Entity uid _) -> return $ Authenticated uid
-        Nothing ->
-          Authenticated
-            <$> insert
-              User
-                { userIdent = credsIdent credentials,
-                  userPassword = Nothing
-                }
+        Just (Entity uid _) -> pure $ Authenticated uid
+        Nothing -> pure $ UserError $ AuthError
 
   -- You can add other plugins like Google Email, email or OAuth here
   authPlugins :: App -> [AuthPlugin App]
-  authPlugins app = authOpenId Claimed [] : extraAuthPlugins
+  authPlugins app = extraAuthPlugins
     where
       -- Enable authDummy login if enabled.
       extraAuthPlugins = [authDummy | appAuthDummyLogin $ appSettings app]

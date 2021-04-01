@@ -13,3 +13,8 @@ BlogPost json
     UniqueTitle title
     deriving Eq
     deriving Show
+LoginRequest json
+    uuid Text
+    userId UserId
+    approved UTCTime Maybe
+    UniqueUuidUserId uuid userId
