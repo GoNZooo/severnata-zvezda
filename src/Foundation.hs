@@ -241,6 +241,7 @@ instance YesodBreadcrumbs App where
   breadcrumb ProfileR = pure ("Profile", Just HomeR)
   breadcrumb PostsR = pure ("Posts", Just HomeR)
   breadcrumb (PostR (BlogPostKey (SqlBackendKey id'))) = pure ("Post " <> tshow id', Just PostsR)
+  breadcrumb (EditPostR (BlogPostKey (SqlBackendKey id'))) = pure ("Edit Post " <> tshow id', Just PostsR)
   breadcrumb _ = pure ("home", Nothing)
 
 -- How to run database actions.
