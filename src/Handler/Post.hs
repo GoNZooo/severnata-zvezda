@@ -1,5 +1,6 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -14,11 +15,14 @@ import Yesod.Form.Bootstrap3
 getPostR :: BlogPostId -> Handler Html
 getPostR postId = do
   maybePost <- runDB $ getPost postId
+  maybeUserId <- maybeAuthId
   case maybePost of
-    Just (Entity _postId (BlogPost title' body' _userId)) ->
+    Just (Entity _postId (BlogPost title' body' userId)) ->
       defaultLayout $ do
         setTitle $ toHtml title'
         let renderedMarkdown = Markdown.markdown def (fromStrict body')
+            ownsPost = Just userId == maybeUserId
+            editLink = [whamlet|<a href=@{EditPostR postId}>Edit|]
         $(widgetFile "post")
     Nothing -> notFound
 

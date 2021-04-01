@@ -1,2 +1,4 @@
+$if ownsPost
+    ^{editLink}
 <h1 #post-title>#{title'}
 <section #post-body>#{renderedMarkdown}
