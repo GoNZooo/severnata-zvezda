@@ -1,9 +1,12 @@
-{-# LANGUAGE ExplicitForAll #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE NoImplicitPrelude #-}
@@ -18,6 +21,7 @@ import Data.Kind (Type)
 import qualified Data.Text.Encoding as TE
 import Database.Persist.Sql (BackendKey (..), ConnectionPool, runSqlPool)
 import Import.NoFoundation
+import Plugin.AuthDiscord (AuthDiscord (..), authDiscord)
 import Text.Hamlet (hamletFile)
 import Text.Jasmine (minifym)
 import Yesod.Auth.Dummy
@@ -185,6 +189,9 @@ instance Yesod App where
   isAuthorized RobotsR _ = pure Authorized
   isAuthorized (StaticR _) _ = pure Authorized
   isAuthorized (PostR _) False = pure Authorized
+  isAuthorized UserR _ = pure Authorized
+  isAuthorized (CheckLoginR _) _ = pure Authorized
+  isAuthorized (AddLoginR _) _ = pure Authorized
   isAuthorized (PostR _) True = isAuthenticated
   isAuthorized (EditPostR _) _ = isAuthenticated
   -- the profile route requires that the user is authenticated, so we
@@ -275,9 +282,9 @@ instance YesodAuth App where
     (MonadHandler m, HandlerSite m ~ App) =>
     Creds App ->
     m (AuthenticationResult App)
-  authenticate credentials = liftHandler $
+  authenticate credentials = liftHandler $ do
     runDB $ do
-      x <- getBy $ UniqueUser $ credsIdent credentials
+      x <- getBy $ UniqueUsername $ credsIdent credentials
       case x of
         Just (Entity uid _) -> pure $ Authenticated uid
         Nothing -> pure $ UserError $ AuthError
@@ -287,7 +294,29 @@ instance YesodAuth App where
   authPlugins app = extraAuthPlugins
     where
       -- Enable authDummy login if enabled.
-      extraAuthPlugins = [authDummy | appAuthDummyLogin $ appSettings app]
+      extraAuthPlugins = [authDummy | appAuthDummyLogin $ appSettings app] <> [authDiscord]
+
+instance AuthDiscord App where
+  type RequestId App = LoginRequestId
+  type LoginUser App = User
+  isLoginRequestApproved = runDB . checkLoginRequest
+  getUserForLoginRequest = runDB . appGetUserForLoginRequest
+  encodeUser (User username _) = username
+
+appGetUserForLoginRequest :: LoginRequestId -> DB (Maybe User)
+appGetUserForLoginRequest loginRequestId' = do
+  maybeLoginRequest <- get loginRequestId'
+  case maybeLoginRequest of
+    Just (LoginRequest _ userId' _) -> do
+      get userId'
+    Nothing -> pure Nothing
+
+checkLoginRequest :: LoginRequestId -> DB Bool
+checkLoginRequest loginRequestId' = do
+  maybeLoginRequest <- get loginRequestId'
+  pure $ case maybeLoginRequest of
+    Just (LoginRequest _ _ (Just _approvedTime)) -> True
+    _ -> False
 
 -- | Access function to determine if a user is logged in.
 isAuthenticated :: Handler AuthResult

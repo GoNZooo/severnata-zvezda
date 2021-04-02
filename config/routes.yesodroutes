@@ -8,6 +8,9 @@
 /robots.txt RobotsR GET
 
 / HomeR GET
+/user UserR GET POST
+/check-login/#LoginRequestId CheckLoginR POST
+/add-login/#LoginRequestId AddLoginR GET
 /post/#BlogPostId PostR GET PUT DELETE
 /post/#BlogPostId/edit EditPostR GET
 /posts PostsR GET POST

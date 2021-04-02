@@ -11,6 +11,16 @@ putForm = formWithMethod (fromString "PUT")
 deleteForm :: Text -> Route site -> WidgetFor site () -> Enctype -> WidgetFor site ()
 deleteForm = formWithMethod (fromString "DELETE")
 
+postForm :: Text -> Route site -> WidgetFor site () -> Enctype -> WidgetFor site ()
+postForm submitText url formWidget formEncodingType = do
+  [whamlet|
+    <form .form-horizontal method=post action=@{url} enctype=#{formEncodingType}>
+        ^{formWidget}
+
+        <button .btn.btn-primary type="submit">
+            #{submitText}
+  |]
+
 formWithMethod :: Text -> Text -> Route site -> WidgetFor site () -> Enctype -> WidgetFor site ()
 formWithMethod method' submitText url formWidget formEncodingType = do
   [whamlet|

@@ -12,7 +12,7 @@ import Handler.Helpers
 import Import
 import Yesod.Form.Bootstrap3 (BootstrapFormLayout (..), renderBootstrap3)
 
-data PostForm = PostForm
+data BlogPostForm = BlogPostForm
   { title :: Text,
     body :: Textarea
   }
@@ -25,7 +25,7 @@ deleteFormRender = renderBootstrap3 BootstrapBasicForm $ pure DeleteForm
 getPostsR :: Handler Html
 getPostsR = do
   maybeUserId <- maybeAuthId
-  (formWidget, formEncodingType) <- generateFormPost postForm
+  (formWidget, formEncodingType) <- generateFormPost blogPostForm
   (deleteFormWidget, deleteFormEncodingType) <- generateFormPost deleteFormRender
   allPostEntities <- runDB getAllPosts
   let posts =
@@ -34,9 +34,10 @@ getPostsR = do
               let postValue = entityVal p
                   postKey = entityKey p
                   deletePostForm = deleteForm "Delete" (PostR postKey) deleteFormWidget deleteFormEncodingType
-               in (postKey, postValue, maybe False (== blogPostUserId postValue) maybeUserId, deletePostForm)
+               in (postKey, postValue, Just (blogPostUserId postValue) == maybeUserId, deletePostForm)
           )
           allPostEntities
+      loggedIn = isJust maybeUserId
 
   defaultLayout $ do
     setTitle "Posts"
@@ -45,9 +46,9 @@ getPostsR = do
 postPostsR :: Handler Html
 postPostsR = do
   maybeUser <- maybeAuthId
-  ((result, _formWidget), _ormEncodingType) <- runFormPost postForm
+  ((result, _formWidget), _ormEncodingType) <- runFormPost blogPostForm
   case result of
-    FormSuccess (PostForm title' body') -> do
+    FormSuccess (BlogPostForm title' body') -> do
       case maybeUser of
         Just userId -> do
           insertResult <-
@@ -65,8 +66,8 @@ postPostsR = do
         Nothing -> invalidArgs []
     _ -> invalidArgs []
 
-postForm :: Form PostForm
-postForm =
+blogPostForm :: Form BlogPostForm
+blogPostForm =
   let fieldSettings label =
         FieldSettings
           { fsLabel = SomeMessage label,
@@ -76,10 +77,12 @@ postForm =
             fsAttrs = [("class", "form-control"), ("placeholder", label)]
           }
    in renderBootstrap3 BootstrapBasicForm $
-        PostForm <$> areq textField (fieldSettings "Title") Nothing <*> areq textareaField (fieldSettings "Body") Nothing
+        BlogPostForm
+          <$> areq textField (fieldSettings "Title") Nothing
+          <*> areq textareaField (fieldSettings "Body") Nothing
 
 getAllPosts :: DB [Entity BlogPost]
 getAllPosts = selectList [] [Asc BlogPostId]
 
 insertPost :: BlogPost -> DB (Maybe (Key BlogPost))
-insertPost post = insertUnique post
+insertPost = insertUnique

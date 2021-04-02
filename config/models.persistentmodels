@@ -2,9 +2,9 @@
 -- Syntax for this file here: https://github.com/yesodweb/persistent/blob/master/docs/Persistent-entity-syntax.md
 
 User
-    ident Text
-    password Text Maybe
-    UniqueUser ident
+    username Text
+    discordUsername Text
+    UniqueUsername username
     deriving Typeable
 BlogPost json
     title Text
@@ -14,7 +14,7 @@ BlogPost json
     deriving Eq
     deriving Show
 LoginRequest json
-    uuid Text
+    uuid UUID sqltype=uuid default=uuid_generate_v4()
     userId UserId
     approved UTCTime Maybe
     UniqueUuidUserId uuid userId

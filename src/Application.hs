@@ -25,21 +25,24 @@ module Application
 where
 
 import Control.Monad.Logger (liftLoc, runLoggingT)
+-- Import all relevant handler modules here.
+-- Don't forget to add new modules to your cabal file!
+
 import Database.Persist.Postgresql
   ( createPostgresqlPool,
     pgConnStr,
     pgPoolSize,
     runSqlPool,
   )
--- Import all relevant handler modules here.
--- Don't forget to add new modules to your cabal file!
-
+import Handler.AddLogin
+import Handler.CheckLogin
 import Handler.Common
 import Handler.EditPosts
 import Handler.Home
 import Handler.Post
 import Handler.Posts
 import Handler.Profile
+import Handler.User
 import Import
 import Language.Haskell.TH.Syntax (qLocation)
 import Network.HTTP.Client.TLS (getGlobalManager)

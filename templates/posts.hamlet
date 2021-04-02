@@ -1,9 +1,10 @@
 <h1>Posts
-    <form .form-horizontal method=post action=@{PostsR} enctype=#{formEncodingType}>
-        ^{formWidget}
+    $if loggedIn
+        <form .form-horizontal method=post action=@{PostsR} enctype=#{formEncodingType}>
+            ^{formWidget}
 
-        <button .btn.btn-primary type="submit">
-            Submit
+            <button .btn.btn-primary type="submit">
+                Submit
     <ul #post-list>
         $forall (postId, BlogPost title _body _userId, isPostOwner, deletePostForm) <- posts
             <li>
