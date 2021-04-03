@@ -19,9 +19,10 @@ import Control.Monad.Logger (LogSource)
 import qualified Data.CaseInsensitive as CI
 import Data.Kind (Type)
 import qualified Data.Text.Encoding as TE
+import qualified Data.UUID.V4 as UUIDv4
 import Database.Persist.Sql (BackendKey (..), ConnectionPool, runSqlPool)
 import Import.NoFoundation
-import Plugin.AuthDiscord (AuthDiscord (..), authDiscord)
+import Plugin.AuthExternal (AuthExternal (..), authExternal)
 import Text.Hamlet (hamletFile)
 import Text.Jasmine (minifym)
 import Yesod.Auth.Dummy
@@ -189,9 +190,6 @@ instance Yesod App where
   isAuthorized RobotsR _ = pure Authorized
   isAuthorized (StaticR _) _ = pure Authorized
   isAuthorized (PostR _) False = pure Authorized
-  isAuthorized UserR _ = pure Authorized
-  isAuthorized (CheckLoginR _) _ = pure Authorized
-  isAuthorized (AddLoginR _) _ = pure Authorized
   isAuthorized (PostR _) True = isAuthenticated
   isAuthorized (EditPostR _) _ = isAuthenticated
   -- the profile route requires that the user is authenticated, so we
@@ -287,21 +285,48 @@ instance YesodAuth App where
       x <- getBy $ UniqueUsername $ credsIdent credentials
       case x of
         Just (Entity uid _) -> pure $ Authenticated uid
-        Nothing -> pure $ UserError $ AuthError
+        Nothing -> pure $ UserError AuthError
 
   -- You can add other plugins like Google Email, email or OAuth here
   authPlugins :: App -> [AuthPlugin App]
   authPlugins app = extraAuthPlugins
     where
       -- Enable authDummy login if enabled.
-      extraAuthPlugins = [authDummy | appAuthDummyLogin $ appSettings app] <> [authDiscord]
+      extraAuthPlugins = [authExternal] <> [authDummy | appAuthDummyLogin $ appSettings app]
 
-instance AuthDiscord App where
+instance AuthExternal App where
   type RequestId App = LoginRequestId
   type LoginUser App = User
   isLoginRequestApproved = runDB . checkLoginRequest
   getUserForLoginRequest = runDB . appGetUserForLoginRequest
   encodeUser (User username _) = username
+  createLoginRequest = runDB . appCreateLoginRequest
+  getUserByUsername = runDB . appGetUserByUsername
+  approveLoginRequest = runDB . appApproveLoginRequest
+
+appCreateLoginRequest :: User -> DB (Maybe LoginRequestId)
+appCreateLoginRequest user = do
+  maybeUserEntity <- getByValue user
+  case maybeUserEntity of
+    Just (Entity userId' _) -> newLoginRequest userId'
+    Nothing -> pure Nothing
+
+appApproveLoginRequest :: LoginRequestId -> DB ()
+appApproveLoginRequest loginRequestId' = do
+  currentTime <- liftIO getCurrentTime
+  update loginRequestId' [LoginRequestApproved =. Just currentTime]
+
+appGetUserByUsername :: Text -> DB (Maybe User)
+appGetUserByUsername username = do
+  maybeUserEntity <- getBy $ UniqueUsername username
+  pure $ case maybeUserEntity of
+    Just (Entity _userId' user') -> Just user'
+    Nothing -> Nothing
+
+newLoginRequest :: UserId -> DB (Maybe LoginRequestId)
+newLoginRequest userId' = do
+  newUuid <- liftIO UUIDv4.nextRandom
+  insertUnique $ LoginRequest newUuid userId' Nothing
 
 appGetUserForLoginRequest :: LoginRequestId -> DB (Maybe User)
 appGetUserForLoginRequest loginRequestId' = do

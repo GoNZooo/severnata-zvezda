@@ -33,7 +33,7 @@ putPostR postId = do
     Just userId' -> do
       ((result, _formWidget), _ormEncodingType) <- runFormPost postForm
       case result of
-        FormSuccess (PostForm {title = title', body = body'}) -> do
+        FormSuccess PostForm {title = title', body = body'} -> do
           runDB $
             modifyPost
               ( Entity postId $

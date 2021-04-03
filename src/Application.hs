@@ -34,15 +34,12 @@ import Database.Persist.Postgresql
     pgPoolSize,
     runSqlPool,
   )
-import Handler.AddLogin
-import Handler.CheckLogin
 import Handler.Common
 import Handler.EditPosts
 import Handler.Home
 import Handler.Post
 import Handler.Posts
 import Handler.Profile
-import Handler.User
 import Import
 import Language.Haskell.TH.Syntax (qLocation)
 import Network.HTTP.Client.TLS (getGlobalManager)

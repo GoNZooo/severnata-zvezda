@@ -6,7 +6,7 @@ async function checkLogin() {
         const headers = {"Content-Type": "application/json"};
         const response = await fetch("@{authPostRoute}", {method: "POST", body: body, headers: headers});
         if (response.redirected) {
-          location.href = "@{PostsR}";
+          location.href = "@{successRedirectRoute}";
         } else {
             scheduleCheck();
         }
