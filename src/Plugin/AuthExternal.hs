@@ -32,12 +32,23 @@ class
   where
   type RequestId site
   type LoginUser site
-  isLoginRequestApproved :: RequestId site -> HandlerFor site Bool
+
+  -- @TODO: make this take an approval structure that contains more, with the implication being that
+  -- it should be a structure that says more about who's approving the login, which can be validated
   approveLoginRequest :: RequestId site -> HandlerFor site ()
+
+  isLoginRequestApproved :: RequestId site -> HandlerFor site Bool
+
   getUserForLoginRequest :: RequestId site -> HandlerFor site (Maybe (LoginUser site))
+
   encodeUser :: LoginUser site -> Text
+
   createLoginRequest :: LoginUser site -> HandlerFor site (Maybe (RequestId site))
+
   getUserByUsername :: Text -> HandlerFor site (Maybe (LoginUser site))
+
+pluginName :: Text
+pluginName = "external-approval"
 
 authExternal :: forall site. (AuthExternal site) => AuthPlugin site
 authExternal =
@@ -50,12 +61,12 @@ authExternal =
       login authToMaster = do
         (formWidget, formEncodingType) <- generateFormPost loginForm
         [whamlet|
-            <form method=post action=@{authToMaster $ PluginR "discord" ["wait"]} enctype=#{formEncodingType}>
-                <div id="discord-login">
+            <form method=post action=@{authToMaster $ PluginR pluginName ["wait"]} enctype=#{formEncodingType}>
+                <div id="external-approval-login">
                     ^{formWidget}
-                <button .btn>Login via Discord
+                <button .btn>Login with external approval
         |]
-   in AuthPlugin "discord" dispatch login
+   in AuthPlugin pluginName dispatch login
 
 waitApprovalHandler ::
   forall site.
@@ -73,7 +84,7 @@ waitApprovalHandler = do
           case maybeLoginRequestId of
             Just loginRequestIdToCheck -> do
               yesodSite <- getYesod
-              let authPostRoute = toParentRoute $ PluginR "discord" ["check"]
+              let authPostRoute = toParentRoute $ PluginR pluginName ["check"]
                   successRedirectRoute = loginDest yesodSite
               liftHandler $
                 defaultLayout $(widgetFile "new-user-wait")
@@ -141,7 +152,7 @@ checkApprovalHandler = do
               maybeUser <- liftHandler $ getUserForLoginRequest loginRequestId'
               case maybeUser of
                 Just user -> do
-                  setCredsRedirect $ Creds "discord" (encodeUser @site user) []
+                  setCredsRedirect $ Creds pluginName (encodeUser @site user) []
                 Nothing -> notFound
             else do
               notFound
