@@ -56,8 +56,6 @@ authExternal =
       dispatch "POST" ["wait"] = waitApprovalHandler >>= sendResponse
       dispatch "POST" ["check"] = checkApprovalHandler >>= sendResponse
       dispatch _ _ = notFound
-      -- @TODO: add login route that does the waiting for response that we do via the user routes now.
-      -- This can be done via the second argument to `dispatch` which is basically a split path.
       login authToMaster = do
         (formWidget, formEncodingType) <- generateFormPost loginForm
         [whamlet|
