@@ -19,3 +19,9 @@ LoginRequest json
     approved UTCTime Maybe
     UniqueUuid uuid
     UniqueUuidUserId uuid userId
+Token json
+    key UUID sqltype=uuid default=uuid_generate_v4()
+    service Text
+    UniqueService service
+    deriving Eq
+    deriving Show
