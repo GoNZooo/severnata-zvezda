@@ -1,1 +1,2 @@
 <h1>Waiting for user activation
+<p>The challenge ID is: #{loginRequestIdToCheck}

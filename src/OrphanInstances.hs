@@ -13,6 +13,8 @@ import Database.Persist.Sql
     PersistValue (..),
     SqlType (..),
   )
+import Text.Blaze (ToMarkup (..))
+import Text.Julius (ToJavascript (..))
 
 instance PersistField UUID where
   toPersistValue uuid = PersistDbSpecific . fromString . UUID.toString $ uuid
@@ -23,3 +25,9 @@ instance PersistField UUID where
 
 instance PersistFieldSql UUID where
   sqlType _ = SqlOther "uuid"
+
+instance ToJavascript UUID where
+  toJavascript = toJavascript . UUID.toText
+
+instance ToMarkup UUID where
+  toMarkup = toMarkup . UUID.toText

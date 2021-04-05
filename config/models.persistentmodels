@@ -3,7 +3,7 @@
 
 User
     username Text
-    discordUsername Text
+    discordUsername Text Maybe
     UniqueUsername username
     deriving Typeable
 BlogPost json
@@ -17,4 +17,5 @@ LoginRequest json
     uuid UUID sqltype=uuid default=uuid_generate_v4()
     userId UserId
     approved UTCTime Maybe
+    UniqueUuid uuid
     UniqueUuidUserId uuid userId

@@ -12,9 +12,10 @@ module Plugin.AuthExternal where
 
 import ClassyPrelude.Yesod
 import Control.Monad.Trans.RWS.Lazy (RWST)
-import Data.Aeson.Types (Result (..), parseMaybe, withObject)
+import Data.Aeson.Types (Result (..), parseEither, parseMaybe, withObject)
+import Data.UUID (UUID)
 import Settings (widgetFile)
-import Text.Blaze (Markup)
+import Text.Blaze (Markup, ToMarkup)
 import Text.Julius (ToJavascript)
 import Yesod.Auth
 
@@ -22,20 +23,23 @@ type Form x site = Html -> MForm (HandlerFor site) (FormResult x, WidgetFor site
 
 newtype FormUsername = FormUsername Text
 
+newtype ApprovalToken = ApprovalToken UUID
+
 class
   ( YesodAuth site,
     FromJSON (RequestId site),
+    FromJSON (ChallengePayload site),
     ToJavascript (RequestId site),
+    ToMarkup (RequestId site),
     (RenderMessage site Text)
   ) =>
   AuthExternal site
   where
   type RequestId site
+  type ChallengePayload site
   type LoginUser site
 
-  -- @TODO: make this take an approval structure that contains more, with the implication being that
-  -- it should be a structure that says more about who's approving the login, which can be validated
-  approveLoginRequest :: RequestId site -> HandlerFor site ()
+  approveLoginRequest :: ChallengePayload site -> HandlerFor site Bool
 
   isLoginRequestApproved :: RequestId site -> HandlerFor site Bool
 
@@ -122,18 +126,17 @@ fieldSettings label =
 
 approveRequestHandler :: forall site. (AuthExternal site) => AuthHandler site Value
 approveRequestHandler = do
-  let parseLoginRequestIdBody = withObject "loginRequestIdBody" $ \o -> do
-        o .: "loginRequestId"
   maybeJsonValue <- parseCheckJsonBody
   case maybeJsonValue of
     Success jsonContent -> do
-      case parseMaybe parseLoginRequestIdBody jsonContent of
-        Just loginRequestId' -> do
-          liftHandler $ approveLoginRequest loginRequestId'
-          pure $ object ["approved" .= True]
-        Nothing -> notFound
+      case parseEither parseJSON jsonContent of
+        Right challengePayload -> do
+          isApproved <- liftHandler $ approveLoginRequest challengePayload
+          pure $ object ["approved" .= isApproved]
+        Left _error -> do
+          invalidArgs []
     _other -> do
-      notFound
+      invalidArgs []
 
 checkApprovalHandler :: forall site. (AuthExternal site) => AuthHandler site TypedContent
 checkApprovalHandler = do

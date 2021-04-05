@@ -7,6 +7,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE NoImplicitPrelude #-}
@@ -18,6 +19,7 @@ import Data.UUID (UUID)
 import Database.Persist.Quasi
 import Database.Persist.Sql (unSqlBackendKey)
 import OrphanInstances ()
+import Text.Blaze (ToMarkup (..))
 import Text.Julius (ToJavascript (..))
 
 -- You can define all of your database entities in the entities file.
@@ -30,3 +32,6 @@ share
 
 instance ToJavascript LoginRequestId where
   toJavascript = toJavascript . Number . fromIntegral . unSqlBackendKey . unLoginRequestKey
+
+instance ToMarkup LoginRequestId where
+  toMarkup = toMarkup @Int64 . fromIntegral . unSqlBackendKey . unLoginRequestKey

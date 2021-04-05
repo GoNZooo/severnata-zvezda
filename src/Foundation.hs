@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -19,7 +21,9 @@ import Control.Monad.Logger (LogSource)
 import qualified Data.CaseInsensitive as CI
 import Data.Kind (Type)
 import qualified Data.Text.Encoding as TE
+import Data.UUID (UUID)
 import qualified Data.UUID.V4 as UUIDv4
+import Database (ChallengeApprovalPayload, appApproveLoginRequest)
 import Database.Persist.Sql (BackendKey (..), ConnectionPool, runSqlPool)
 import Import.NoFoundation
 import Plugin.AuthExternal (AuthExternal (..), authExternal)
@@ -295,52 +299,51 @@ instance YesodAuth App where
       extraAuthPlugins = [authExternal] <> [authDummy | appAuthDummyLogin $ appSettings app]
 
 instance AuthExternal App where
-  type RequestId App = LoginRequestId
+  type RequestId App = UUID
   type LoginUser App = User
+  type ChallengePayload App = ChallengeApprovalPayload
   isLoginRequestApproved = runDB . checkLoginRequest
   getUserForLoginRequest = runDB . appGetUserForLoginRequest
-  encodeUser (User username _) = username
+  encodeUser (User username' _) = username'
   createLoginRequest = runDB . appCreateLoginRequest
   getUserByUsername = runDB . appGetUserByUsername
   approveLoginRequest = runDB . appApproveLoginRequest
 
-appCreateLoginRequest :: User -> DB (Maybe LoginRequestId)
+appCreateLoginRequest :: User -> DB (Maybe UUID)
 appCreateLoginRequest user = do
   maybeUserEntity <- getByValue user
   case maybeUserEntity of
     Just (Entity userId' _) -> newLoginRequest userId'
     Nothing -> pure Nothing
 
-appApproveLoginRequest :: LoginRequestId -> DB ()
-appApproveLoginRequest loginRequestId' = do
-  currentTime <- liftIO getCurrentTime
-  update loginRequestId' [LoginRequestApproved =. Just currentTime]
-
 appGetUserByUsername :: Text -> DB (Maybe User)
-appGetUserByUsername username = do
-  maybeUserEntity <- getBy $ UniqueUsername username
+appGetUserByUsername username' = do
+  maybeUserEntity <- getBy $ UniqueUsername username'
   pure $ case maybeUserEntity of
     Just (Entity _userId' user') -> Just user'
     Nothing -> Nothing
 
-newLoginRequest :: UserId -> DB (Maybe LoginRequestId)
+newLoginRequest :: UserId -> DB (Maybe UUID)
 newLoginRequest userId' = do
   newUuid <- liftIO UUIDv4.nextRandom
-  insertUnique $ LoginRequest newUuid userId' Nothing
+  maybeId' <- insertUnique $ LoginRequest newUuid userId' Nothing
+  pure $ case maybeId' of
+    Just _ -> Just newUuid
+    Nothing -> Nothing
 
-appGetUserForLoginRequest :: LoginRequestId -> DB (Maybe User)
-appGetUserForLoginRequest loginRequestId' = do
-  maybeLoginRequest <- get loginRequestId'
+appGetUserForLoginRequest :: UUID -> DB (Maybe User)
+appGetUserForLoginRequest uuid = do
+  maybeLoginRequest <- getBy $ UniqueUuid uuid
   case maybeLoginRequest of
-    Just (LoginRequest _ userId' _) -> do
+    Just (Entity _loginRequestId (LoginRequest _ userId' _)) -> do
       get userId'
     Nothing -> pure Nothing
 
-checkLoginRequest :: LoginRequestId -> DB Bool
-checkLoginRequest loginRequestId' = do
-  maybeLoginRequest <- get loginRequestId'
+checkLoginRequest :: UUID -> DB Bool
+checkLoginRequest uuid = do
+  maybeLoginRequest <- getBy $ UniqueUuid uuid
   pure $ case maybeLoginRequest of
-    Just (LoginRequest _ _ (Just _approvedTime)) -> True
+    Just (Entity _loginRequestId (LoginRequest _ _ (Just _approvedTime))) -> True
     _ -> False
 
 -- | Access function to determine if a user is logged in.
