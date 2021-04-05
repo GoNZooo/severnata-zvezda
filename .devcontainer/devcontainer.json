@@ -7,6 +7,15 @@
     "sjurmillidahl.ormolu-vscode",
     "dramforever.vscode-ghc-simple",
     "lunaryorn.hlint",
-    "bigmoon.language-yesod"
-  ]
+    "bigmoon.language-yesod",
+    "gonzooo.at-notes"
+  ],
+  "settings": {
+    "[haskell]": {
+      "editor.tabSize": 2,
+      "editor.formatOnSave": true,
+      "editor.defaultFormatter": "sjurmillidahl.ormolu-vscode",
+      "editor.renderIndentGuides": true
+    }
+  }
 }
