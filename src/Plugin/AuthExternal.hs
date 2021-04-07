@@ -41,6 +41,8 @@ class
 
   approveLoginRequest :: ChallengePayload site -> HandlerFor site Bool
 
+  markLoginRequestAsFollowed :: RequestId site -> HandlerFor site ()
+
   isLoginRequestApproved :: RequestId site -> HandlerFor site Bool
 
   getUserForLoginRequest :: RequestId site -> HandlerFor site (Maybe (LoginUser site))
@@ -153,6 +155,7 @@ checkApprovalHandler = do
               maybeUser <- liftHandler $ getUserForLoginRequest loginRequestId'
               case maybeUser of
                 Just user -> do
+                  liftHandler $ markLoginRequestAsFollowed loginRequestId'
                   setCredsRedirect $ Creds pluginName (encodeUser @site user) []
                 Nothing -> notFound
             else do

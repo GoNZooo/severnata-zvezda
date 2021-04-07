@@ -308,6 +308,7 @@ instance AuthExternal App where
   createLoginRequest = runDB . appCreateLoginRequest
   getUserByUsername = runDB . appGetUserByUsername
   approveLoginRequest = runDB . appApproveLoginRequest
+  markLoginRequestAsFollowed = runDB . appMarkLoginRequestAsFollowed
 
 appCreateLoginRequest :: User -> DB (Maybe UUID)
 appCreateLoginRequest user = do
@@ -326,7 +327,7 @@ appGetUserByUsername username' = do
 newLoginRequest :: UserId -> DB (Maybe UUID)
 newLoginRequest userId' = do
   newUuid <- liftIO UUIDv4.nextRandom
-  maybeId' <- insertUnique $ LoginRequest newUuid userId' Nothing
+  maybeId' <- insertUnique $ LoginRequest newUuid userId' Nothing False
   pure $ case maybeId' of
     Just _ -> Just newUuid
     Nothing -> Nothing
@@ -335,7 +336,7 @@ appGetUserForLoginRequest :: UUID -> DB (Maybe User)
 appGetUserForLoginRequest uuid = do
   maybeLoginRequest <- getBy $ UniqueUuid uuid
   case maybeLoginRequest of
-    Just (Entity _loginRequestId (LoginRequest _ userId' _)) -> do
+    Just (Entity _loginRequestId (LoginRequest _ userId' _ _)) -> do
       get userId'
     Nothing -> pure Nothing
 
@@ -343,8 +344,16 @@ checkLoginRequest :: UUID -> DB Bool
 checkLoginRequest uuid = do
   maybeLoginRequest <- getBy $ UniqueUuid uuid
   pure $ case maybeLoginRequest of
-    Just (Entity _loginRequestId (LoginRequest _ _ (Just _approvedTime))) -> True
+    Just (Entity _loginRequestId (LoginRequest _ _ (Just _approvedTime) followed)) -> not followed
     _ -> False
+
+appMarkLoginRequestAsFollowed :: UUID -> DB ()
+appMarkLoginRequestAsFollowed uuid = do
+  maybeLoginRequest <- getBy $ UniqueUuid uuid
+  case maybeLoginRequest of
+    Just (Entity loginRequestId' _loginRequest') ->
+      update loginRequestId' [LoginRequestFollowed =. True]
+    _ -> pure ()
 
 -- | Access function to determine if a user is logged in.
 isAuthenticated :: Handler AuthResult

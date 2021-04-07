@@ -17,6 +17,7 @@ LoginRequest json
     uuid UUID sqltype=uuid default=uuid_generate_v4()
     userId UserId
     approved UTCTime Maybe
+    followed Bool
     UniqueUuid uuid
     UniqueUuidUserId uuid userId
 Token json
