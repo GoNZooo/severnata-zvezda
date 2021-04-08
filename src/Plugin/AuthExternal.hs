@@ -39,14 +39,23 @@ class
   type ChallengePayload site
   type LoginUser site
 
+  -- | Used to approve a login request via the incoming challenge payload. The challenge should
+  -- contain everything needed to successfully verify that the service approving the request is able
+  -- to do so as well as the challenge being the one that corresponds to the login request being
+  -- approved.
   approveLoginRequest :: ChallengePayload site -> HandlerFor site Bool
 
+  -- | Used to consume the login request such that it cannot be used for logging in again, meaning
+  -- we cannot replay login requests.
   markLoginRequestAsFollowed :: RequestId site -> HandlerFor site ()
 
+  -- | Used to check an already existing login request for approval. This is called to observe the
+  -- status of the login request, not to change it.
   isLoginRequestApproved :: RequestId site -> HandlerFor site Bool
 
   getUserForLoginRequest :: RequestId site -> HandlerFor site (Maybe (LoginUser site))
 
+  -- | Used to encode the user data for placing in the user's session.
   encodeUser :: LoginUser site -> Text
 
   createLoginRequest :: LoginUser site -> HandlerFor site (Maybe (RequestId site))
