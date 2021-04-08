@@ -71,13 +71,15 @@ authExternal =
       dispatch "POST" ["wait"] = waitApprovalHandler >>= sendResponse
       dispatch "POST" ["check"] = checkApprovalHandler >>= sendResponse
       dispatch _ _ = notFound
+
       login authToMaster = do
+        let routeToWaitPage = authToMaster $ PluginR pluginName ["wait"]
         (formWidget, formEncodingType) <- generateFormPost loginForm
         [whamlet|
-            <form method=post action=@{authToMaster $ PluginR pluginName ["wait"]} enctype=#{formEncodingType}>
-                <div id="external-approval-login">
+            <form method=post action=@{routeToWaitPage} enctype=#{formEncodingType}>
+                <div id="external-approval-login-form-div">
                     ^{formWidget}
-                <button .btn>Login with external approval
+                <button class="btn" id="external-approval-login-button">Login with external approval
         |]
    in AuthPlugin pluginName dispatch login
 
