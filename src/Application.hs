@@ -188,8 +188,11 @@ appMain = do
   -- Generate a WAI Application from the foundation
   app <- makeApplication foundation
 
+  let warpSettings' = warpSettings foundation
+  putStrLn $ "Running on port " <> tshow (getPort warpSettings')
+
   -- Run the application with Warp
-  runSettings (warpSettings foundation) app
+  runSettings warpSettings' app
 
 --------------------------------------------------------------
 -- Functions for DevelMain.hs (a way to run the app from GHCi)
