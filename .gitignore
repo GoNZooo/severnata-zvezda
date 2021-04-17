@@ -24,3 +24,4 @@ severnata-zvezda.cabal
 .idea
 out
 .devcontainer/build
+.devcontainer/postgres-data
