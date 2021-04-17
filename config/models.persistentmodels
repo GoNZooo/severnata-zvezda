@@ -14,14 +14,14 @@ BlogPost json
     deriving Eq
     deriving Show
 LoginRequest json
-    uuid UUID sqltype=uuid default=uuid_generate_v4()
+    uuid UUID sqltype=uuid default=gen_random_uuid()
     userId UserId
     approved UTCTime Maybe
     followed Bool
     UniqueUuid uuid
     UniqueUuidUserId uuid userId
 Token json
-    key UUID sqltype=uuid default=uuid_generate_v4()
+    key UUID sqltype=uuid default=gen_random_uuid()
     service Text
     UniqueService service
     deriving Eq
