@@ -1,4 +1,5 @@
 {
+  "name": "severnata-zvezda",
   "service": "severnata-zvezda",
   "workspaceFolder": "/workspace",
   "dockerComposeFile": "./docker-compose.yaml",
