@@ -137,12 +137,6 @@ instance Yesod App where
                   menuItemRoute = PostsR,
                   menuItemAccessCallback = True
                 },
-            NavbarLeft $
-              MenuItem
-                { menuItemLabel = "Profile",
-                  menuItemRoute = ProfileR,
-                  menuItemAccessCallback = isJust user
-                },
             NavbarRight $
               MenuItem
                 { menuItemLabel = "Login",
@@ -196,9 +190,6 @@ instance Yesod App where
   isAuthorized (PostR _) False = pure Authorized
   isAuthorized (PostR _) True = isAuthenticated
   isAuthorized (EditPostR _) _ = isAuthenticated
-  -- the profile route requires that the user is authenticated, so we
-  -- delegate to that function
-  isAuthorized ProfileR _ = isAuthenticated
 
   -- This function creates static content files in the static folder
   -- and names them based on a hash of their content. This allows
@@ -247,7 +238,6 @@ instance YesodBreadcrumbs App where
   breadcrumb :: Route App -> Handler (Text, Maybe (Route App))
   breadcrumb HomeR = pure ("Home", Nothing)
   breadcrumb (AuthR _) = pure ("Login", Just HomeR)
-  breadcrumb ProfileR = pure ("Profile", Just HomeR)
   breadcrumb PostsR = pure ("Posts", Just HomeR)
   breadcrumb (PostR (BlogPostKey (SqlBackendKey id'))) = pure ("Post " <> tshow id', Just PostsR)
   breadcrumb (EditPostR (BlogPostKey (SqlBackendKey id'))) = pure ("Edit Post " <> tshow id', Just PostsR)

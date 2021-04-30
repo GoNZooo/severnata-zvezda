@@ -151,6 +151,7 @@ approveRequestHandler = do
     _other -> do
       invalidArgs []
 
+-- @TODO: make this decode a payload defined in the type class instance
 checkApprovalHandler :: forall site. (AuthExternal site) => AuthHandler site TypedContent
 checkApprovalHandler = do
   let parseLoginRequestIdBody = withObject "loginRequestIdBody" $ \o -> do

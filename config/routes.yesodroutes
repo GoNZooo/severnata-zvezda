@@ -11,5 +11,3 @@
 /post/#BlogPostId PostR GET PUT DELETE
 /post/#BlogPostId/edit EditPostR GET
 /posts PostsR GET POST
-
-/profile ProfileR GET

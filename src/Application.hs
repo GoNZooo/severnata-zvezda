@@ -39,7 +39,6 @@ import Handler.EditPosts
 import Handler.Home
 import Handler.Post
 import Handler.Posts
-import Handler.Profile
 import Import
 import Language.Haskell.TH.Syntax (qLocation)
 import Network.HTTP.Client.TLS (getGlobalManager)
