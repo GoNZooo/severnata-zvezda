@@ -82,7 +82,7 @@ blogPostForm =
           <*> areq textareaField (fieldSettings "Body") Nothing
 
 getAllPosts :: DB [Entity BlogPost]
-getAllPosts = selectList [] [Asc BlogPostId]
+getAllPosts = selectList [] [Desc BlogPostId]
 
 insertPost :: BlogPost -> DB (Maybe (Key BlogPost))
 insertPost = insertUnique
