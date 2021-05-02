@@ -6,10 +6,12 @@
             <button .btn.btn-primary type="submit">
                 Submit
     <ul #post-list>
-        $forall (postId, BlogPost title _body _userId, isPostOwner, deletePostForm) <- posts
-            <li>
-                <div>
-                    <a href=@{PostR postId}>#{title}
+        $forall (postId, BlogPost {blogPostTitle, blogPostCreated}, isPostOwner, deletePostForm) <- posts
+            <li class="post-item">
+                <div class="post-item-container">
+                    <a href=@{PostR postId} class="blog-post-link">
+                        <span class="post-item-date">#{showGregorian $ utctDay blogPostCreated}
+                        <span class="post-item-title">#{blogPostTitle}
                     $if isPostOwner
                         <a href=@{EditPostR postId}>Edit
                         ^{deletePostForm}

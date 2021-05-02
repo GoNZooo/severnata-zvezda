@@ -1,10 +1,5 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE NoImplicitPrelude #-}
 
 module Handler.Post where
 
@@ -17,11 +12,11 @@ getPostR postId = do
   maybePost <- runDB $ getPost postId
   maybeUserId <- maybeAuthId
   case maybePost of
-    Just (Entity _postId (BlogPost title' body' userId)) ->
+    Just (Entity _postId BlogPost {blogPostTitle, blogPostBody, blogPostUserId}) ->
       defaultLayout $ do
-        setTitle $ toHtml title'
-        let renderedMarkdown = Markdown.markdown def $ fromStrict body'
-            ownsPost = Just userId == maybeUserId
+        setTitle $ toHtml blogPostTitle
+        let renderedMarkdown = Markdown.markdown def $ fromStrict blogPostBody
+            ownsPost = Just blogPostUserId == maybeUserId
             editLink = [whamlet|<a href=@{EditPostR postId}>Edit|]
         $(widgetFile "post")
     Nothing -> notFound
@@ -33,14 +28,22 @@ putPostR postId = do
     Just userId' -> do
       ((result, _formWidget), _ormEncodingType) <- runFormPost postForm
       case result of
-        FormSuccess PostForm {title = title', body = body'} -> do
+        FormSuccess PostForm {title, body} -> do
+          now <- liftIO getCurrentTime
+          let blogPostTitle = title
+              blogPostBody = body
+              blogPostUserId = userId'
+              blogPostCreated = now
+              blogPostUpdated = now
           runDB $
             modifyPost
               ( Entity postId $
                   BlogPost
-                    { blogPostTitle = title',
-                      blogPostBody = body',
-                      blogPostUserId = userId'
+                    { blogPostTitle,
+                      blogPostBody,
+                      blogPostUserId,
+                      blogPostCreated,
+                      blogPostUpdated
                     }
               )
           redirect $ PostR postId

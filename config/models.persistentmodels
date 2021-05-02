@@ -10,6 +10,8 @@ BlogPost json
     title Text
     body Text -- this is markdown
     userId UserId
+    created UTCTime default=now()
+    updated UTCTime default=now()
     UniqueTitle title
     deriving Eq
     deriving Show

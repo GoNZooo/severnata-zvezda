@@ -8,6 +8,7 @@
 module Handler.Posts where
 
 import qualified Data.List as List
+import Data.Time.Calendar (showGregorian)
 import Handler.Helpers
 import Import
 import Yesod.Form.Bootstrap3 (BootstrapFormLayout (..), renderBootstrap3)
@@ -48,16 +49,24 @@ postPostsR = do
   maybeUser <- maybeAuthId
   ((result, _formWidget), _ormEncodingType) <- runFormPost blogPostForm
   case result of
-    FormSuccess (BlogPostForm title' body') -> do
+    FormSuccess BlogPostForm {title, body} -> do
       case maybeUser of
         Just userId -> do
+          now <- liftIO getCurrentTime
+          let blogPostTitle = title
+              blogPostBody = unTextarea body
+              blogPostUserId = userId
+              blogPostCreated = now
+              blogPostUpdated = now
           insertResult <-
             runDB $
               insertPost $
                 BlogPost
-                  { blogPostTitle = title',
-                    blogPostBody = unTextarea body',
-                    blogPostUserId = userId
+                  { blogPostTitle,
+                    blogPostBody,
+                    blogPostUserId,
+                    blogPostCreated,
+                    blogPostUpdated
                   }
           case insertResult of
             Just userId' -> defaultLayout $ do
